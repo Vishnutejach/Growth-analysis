@@ -1,0 +1,12 @@
+Quick-Commerce Growth Command Center Run Summary
+Source: C:\Users\vishn\OneDrive\Documents\New project\quick-commerce-growth-command-center\data\raw\d2c_marketing_funnel_data.csv
+Date range: 2025-07-01 to 2025-12-27
+Sessions: 120,000
+Users: 112,352
+Orders: 8,181
+Revenue: 17,016,599.15
+Visit-to-order conversion: 6.82%
+First-to-second order rate: 0.52%
+D7/D14/D30 retention: 0.01% / 0.09% / 0.15%
+Highest revenue campaign: Paid Ads - Discount (3,676,680.63)
+Biggest funnel dropoff: Cart Add

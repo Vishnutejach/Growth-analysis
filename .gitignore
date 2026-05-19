@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.deps/
+.streamlit/
+data/raw/d2c_marketing_funnel_clean.csv
