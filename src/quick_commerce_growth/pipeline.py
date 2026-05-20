@@ -6,13 +6,7 @@ import pandas as pd
 
 from .config import PROCESSED_DATA_DIR, RAW_DATA_DIR, SOURCE_DATA_PATH
 from .data_loading import load_marketing_funnel_data
-from .metrics import (
-    build_campaign_performance,
-    build_dimension_performance,
-    build_funnel_summary,
-    build_monthly_summary,
-    build_retention_summary,
-)
+from .sql_metrics import build_sql_outputs
 
 
 def _ensure_directories() -> None:
@@ -54,11 +48,13 @@ def run_pipeline() -> None:
     raw_df = load_marketing_funnel_data()
     raw_df.to_csv(RAW_DATA_DIR / "d2c_marketing_funnel_clean.csv", index=False)
 
-    funnel_df = build_funnel_summary(raw_df)
-    monthly_df = build_monthly_summary(raw_df)
-    dimension_df = build_dimension_performance(raw_df)
-    campaign_df = build_campaign_performance(raw_df)
-    retention_summary_df, customer_retention_df = build_retention_summary(raw_df)
+    sql_outputs = build_sql_outputs(raw_df)
+    funnel_df = sql_outputs["funnel"]
+    monthly_df = sql_outputs["monthly"]
+    dimension_df = sql_outputs["dimensions"]
+    campaign_df = sql_outputs["campaigns"]
+    retention_summary_df = sql_outputs["retention_summary"]
+    customer_retention_df = sql_outputs["customer_retention"]
 
     funnel_df.to_csv(PROCESSED_DATA_DIR / "funnel_summary.csv", index=False)
     monthly_df.to_csv(PROCESSED_DATA_DIR / "monthly_growth_kpis.csv", index=False)
@@ -75,7 +71,7 @@ def run_pipeline() -> None:
         campaign_df,
     )
 
-    print("Quick-commerce growth pipeline completed successfully.")
+    print("Quick-commerce growth SQL pipeline completed successfully.")
     print(f"Sessions: {len(raw_df):,}")
     print(f"Users: {raw_df['user_id'].nunique():,}")
     print(f"Orders: {int(raw_df['purchase_completed_flag'].sum()):,}")

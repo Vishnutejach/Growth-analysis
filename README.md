@@ -1,12 +1,12 @@
 # Growth Analysis: Quick-Commerce Growth Command Center
 
-An end-to-end SQL + Python + Streamlit analytics project for diagnosing a D2C grocery/quick-commerce marketing funnel. The dashboard tracks acquisition quality, activation leakage, campaign performance, repeat purchase behavior, retention, and churn risk from session-level funnel data.
+An end-to-end DuckDB SQL + Python + Streamlit analytics project for diagnosing a D2C grocery/quick-commerce marketing funnel. The dashboard tracks acquisition quality, activation leakage, campaign performance, repeat purchase behavior, retention, and churn risk from session-level funnel data.
 
 ## Why This Project Matters
 
 Quick-commerce growth teams do not only need top-line sessions and revenue. They need to know where users fall out of the funnel, which campaigns create high-intent customers, how many first-time buyers return, and which customer cohorts need onboarding, habit-formation, or win-back interventions.
 
-This repository turns raw funnel events into a decision-ready growth command center.
+This repository turns raw funnel events into a decision-ready growth command center. Python handles orchestration and the dashboard, while DuckDB SQL actively powers the KPI transformations.
 
 ## Dataset
 
@@ -65,7 +65,7 @@ The dataset does not include SKU or product category, so the dashboard models wa
     `-- quick_commerce_growth
         |-- config.py
         |-- data_loading.py
-        |-- metrics.py
+        |-- sql_metrics.py
         `-- pipeline.py
 ```
 
@@ -77,7 +77,7 @@ Create an environment and install dependencies:
 pip install -r requirements.txt
 ```
 
-Generate the analytics tables:
+Generate the analytics tables. This command loads the CSV, creates a DuckDB in-memory analytical table, and runs SQL transformations for the dashboard outputs:
 
 ```bash
 python run_pipeline.py
@@ -101,6 +101,25 @@ On Windows PowerShell:
 $env:D2C_FUNNEL_DATA_PATH="C:\path\to\your\file.csv"
 python run_pipeline.py
 ```
+
+## Active SQL Pipeline
+
+SQL is not just included as reference material. The runnable pipeline uses DuckDB in `src/quick_commerce_growth/sql_metrics.py` to generate:
+
+- Funnel stage conversion and drop-off
+- Monthly growth KPIs
+- Channel/campaign/device/region/user-type wallet share
+- Campaign conversion and revenue per session
+- Customer-level first order, second order, repeat frequency, and churn risk
+- Retention summary KPIs
+
+`src/quick_commerce_growth/pipeline.py` orchestrates the flow:
+
+1. Python reads and lightly cleans the raw CSV.
+2. DuckDB SQL creates the analytical `funnel_events` table.
+3. DuckDB SQL writes each KPI output as a pandas DataFrame.
+4. Python saves the SQL-generated outputs to `data/processed`.
+5. Streamlit reads the processed tables for visualization.
 
 ## Pipeline Outputs
 
@@ -131,7 +150,7 @@ From the included dataset:
 
 ## SQL Layer
 
-The `sql` folder contains warehouse-style analytics assets:
+The `sql` folder contains warehouse-style analytics assets that mirror the active DuckDB transformations:
 
 - `schema.sql`: table definition and CSV load pattern
 - `kpi_queries.sql`: executive KPIs, funnel progression, monthly trends, campaign performance, wallet share, and retention queries

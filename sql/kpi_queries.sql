@@ -1,5 +1,6 @@
 -- Quick-Commerce Growth Command Center KPI queries.
--- These queries use SQL-compatible CASE expressions and run in DuckDB/Postgres with minor path setup differences.
+-- The Python pipeline actively runs DuckDB SQL equivalents of these transformations
+-- in src/quick_commerce_growth/sql_metrics.py.
 
 WITH base AS (
     SELECT
@@ -115,3 +116,67 @@ SELECT
     AVG(CASE WHEN second_order_date <= first_order_date + INTERVAL '30 days' THEN 1 ELSE 0 END) AS d30_retention,
     AVG(CASE WHEN DATE '2025-12-27' - last_order_date > 30 THEN 1 ELSE 0 END) AS high_churn_risk_rate
 FROM customer_orders;
+
+WITH base AS (
+    SELECT
+        *,
+        CASE WHEN viewed_product = 'Yes' THEN 1 ELSE 0 END AS viewed_flag,
+        CASE WHEN added_to_cart = 'Yes' THEN 1 ELSE 0 END AS cart_flag,
+        CASE WHEN checkout_started = 'Yes' THEN 1 ELSE 0 END AS checkout_flag,
+        CASE WHEN purchase_completed = 'Yes' THEN 1 ELSE 0 END AS order_flag,
+        CASE WHEN discount_applied = 'Yes' THEN 1 ELSE 0 END AS discount_flag
+    FROM d2c_marketing_funnel
+),
+segment_rollup AS (
+    SELECT
+        'channel' AS dimension,
+        channel AS segment,
+        COUNT(*) AS sessions,
+        COUNT(DISTINCT user_id) AS users,
+        SUM(viewed_flag) AS views,
+        SUM(cart_flag) AS carts,
+        SUM(checkout_flag) AS checkouts,
+        SUM(order_flag) AS orders,
+        SUM(revenue) AS revenue,
+        SUM(discount_flag) AS discounted_sessions
+    FROM base
+    GROUP BY channel
+    UNION ALL
+    SELECT 'campaign_type', campaign_type, COUNT(*), COUNT(DISTINCT user_id),
+           SUM(viewed_flag), SUM(cart_flag), SUM(checkout_flag), SUM(order_flag), SUM(revenue), SUM(discount_flag)
+    FROM base
+    GROUP BY campaign_type
+    UNION ALL
+    SELECT 'device', device, COUNT(*), COUNT(DISTINCT user_id),
+           SUM(viewed_flag), SUM(cart_flag), SUM(checkout_flag), SUM(order_flag), SUM(revenue), SUM(discount_flag)
+    FROM base
+    GROUP BY device
+    UNION ALL
+    SELECT 'region', region, COUNT(*), COUNT(DISTINCT user_id),
+           SUM(viewed_flag), SUM(cart_flag), SUM(checkout_flag), SUM(order_flag), SUM(revenue), SUM(discount_flag)
+    FROM base
+    GROUP BY region
+    UNION ALL
+    SELECT 'user_type', user_type, COUNT(*), COUNT(DISTINCT user_id),
+           SUM(viewed_flag), SUM(cart_flag), SUM(checkout_flag), SUM(order_flag), SUM(revenue), SUM(discount_flag)
+    FROM base
+    GROUP BY user_type
+)
+SELECT
+    dimension,
+    segment,
+    sessions,
+    users,
+    views,
+    carts,
+    checkouts,
+    orders,
+    revenue,
+    discounted_sessions,
+    orders::DOUBLE / NULLIF(sessions, 0) AS conversion_rate,
+    carts::DOUBLE / NULLIF(views, 0) AS view_to_cart_rate,
+    orders::DOUBLE / NULLIF(checkouts, 0) AS checkout_to_order_rate,
+    revenue::DOUBLE / NULLIF(orders, 0) AS aov,
+    revenue::DOUBLE / NULLIF(SUM(revenue) OVER (PARTITION BY dimension), 0) AS wallet_share
+FROM segment_rollup
+ORDER BY dimension, revenue DESC;
