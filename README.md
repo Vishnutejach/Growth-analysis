@@ -173,7 +173,3 @@ The Streamlit app includes:
 ## Business Interpretation
 
 The strongest drop-off appears at the cart-add stage, suggesting the largest growth opportunity is improving product-page persuasion, assortment relevance, offer clarity, delivery promise, and cart incentives. Paid Ads drives the largest wallet share, while Email shows the highest channel-level conversion rate in the included output. Retention is low, which points to onboarding and post-first-order lifecycle programs as the most important next experiments.
-
-## Resume Bullet
-
-Built a quick-commerce growth dashboard using SQL and Python to diagnose acquisition, activation, retention, and churn across customer cohorts; identified lifecycle interventions for onboarding, habit formation, and win-back.
